@@ -27,3 +27,15 @@
 {{ip_9}}
 
 
+{% set ip_address = item.mgmt_ip | ipsubnet(16, 1) %}
+ip address {{ip_address}}
+{% set ip_mgmt = ip_address | ipsubnet(30, 1) %}
+{% set name = item.hostname [-2:] %} 
+{% if name == '1m'%}
+{% set loop_ip = ip_mgmt | ipaddr('net')| ipaddr('1') | ipaddr('address') %}
+{% elif name == '2m' %}
+{% set loop_ip = ip_mgmt | ipaddr('net')| ipaddr('2') | ipaddr('address') %}
+{% else %}
+{% set loop_ip = ip_mgmt | ipaddr('net')| ipaddr('2') | ipaddr('address') %}
+{%endif%}
+#

@@ -1,0 +1,29 @@
+
+{% set ip_addrs = 10.179.32.0 %}
+
+{% set ip_1 = ip_addrs | ipsubnet(23, 1) %}
+{% set ip_2 = ip_addrs | ipsubnet(23, 2) %}
+{% set ip_3 = ip_addrs | ipsubnet(23, 3) %}
+{% set ip_4 = ip_addrs | ipsubnet(23, 4) %}
+{% set ip_5 = ip_addrs | ipsubnet(23, 5) %}
+{% set ip_6 = ip_addrs | ipsubnet(23, 6) %}
+{% set ip_7 = ip_addrs | ipsubnet(23, 7) %}
+{% set ip_8 = ip_addrs | ipsubnet(23, 8) %}
+{% set ip_9 = ip_addrs | ipsubnet(23, 9) %}
+{% set ip_10 = ip_addrs | ipsubnet(23, 10) %}
+{% set ip_11 = ip_addrs | ipsubnet(23, 11) %}
+{% set ip_12 = ip_addrs | ipsubnet(23, 12) %}
+{% set ip_13 = ip_addrs | ipsubnet(23, 13) %}
+
+
+{{ip_1}}
+{{ip_2}}
+{{ip_3}}
+{{ip_4}}
+{{ip_5}}
+{{ip_6}}
+{{ip_7}}
+{{ip_8}}
+{{ip_9}}
+
+

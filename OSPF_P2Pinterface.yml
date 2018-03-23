@@ -1,0 +1,50 @@
+---
+- name: convert ospf interface to p2p 
+  hosts: rs
+  connection: local 
+  gather_facts: false 
+
+
+  vars_prompt: 
+    - name: user
+      prompt: "Username" 
+      private: no 
+    - name: pass
+      prompt: "Password" 
+
+
+  tasks: 
+    - name: OSPF precheck 
+      ios_command: 
+        authorize: true
+        provider: 
+          username: "{{user}}"
+          password: "{{pass}}"
+        commands: 
+          - show ip ospf inter f0/0 | in Network Type
+
+      register: ospf_precheck 
+    - debug: var=ospf_precheck.stdout_lines
+
+
+    - name: conver OSPF interface to P2P 
+      ios_config:
+        authorize: true
+        provider:
+          username: "{{user}}"
+          password: "{{pass}}"
+        parents: inter f0/0 
+        lines: 
+          - ip ospf network point-to-point 
+
+    - name: OSPF postcheck 
+      ios_command: 
+        authorize: true
+        provider: 
+          username: "{{user}}"
+          password: "{{pass}}"
+        commands: 
+          - show ip ospf inter f0/0 | in Network Type
+
+      register: ospf_postcheck 
+    - debug: var=ospf_postcheck.stdout_lines

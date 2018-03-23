@@ -1,0 +1,26 @@
+---
+- name: show IP Route
+  hosts: all
+  connection: local
+  gather_facts: false
+
+  vars_prompt:
+     - name: username       # here is the actual name for the var that you will call in provider modules! 
+       prompt: "Enter Your Username"     # this is just msg pop up to the user asked him what the NDE want!! 
+     - name: password
+       prompt: "Type Your Password"  # this is just msg pop up to the user asked him what the NDE want!! 
+
+  tasks: 
+    - name: show ip route
+      ios_command: 
+        authorize: true
+        provider: 
+          username: "{{ username }}"   # the name here is that same var_prompt NAME
+          password: "{{ password }}"   # the pass here is that same var_prompt PASSWORD
+          port: 22 
+
+        commands: 
+          - show ip route 
+
+      register: iproute
+    - debug: var=iproute.stdout_lines

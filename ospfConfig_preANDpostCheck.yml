@@ -1,0 +1,55 @@
+---
+- name: confige OSPF 
+  hosts: all
+  connection: local 
+  gather_facts: false
+
+
+  vars_prompt:
+    - name: user
+      prompt: "username"
+      private: no 
+    - name: pass
+      prompt: "password"
+
+
+
+  tasks: 
+    - name: check ospf current configuration 
+      ios_command:
+        authorize: yes
+        provider: 
+          username: "{{ user }}"
+          password: "{{ pass }}"
+        commands: 
+          - show ip ospf nei 
+          - show ip pro 
+          - show ip ospf database 
+
+      register: precheck
+    - debug: var=precheck.stdout_lines
+
+
+    - name: Confige OSPF
+      ios_config: 
+        authorize: yes
+        provider: 
+          username: "{{ user }}"
+          password: "{{ pass }}"
+        parents: router ospf 1 
+        lines: 
+          - network 0.0.0.0 255.255.255.255 are 0 
+
+    - name: check ospf new configuration 
+      ios_command:
+        authorize: yes
+        provider: 
+          username: "{{ user }}"
+          password: "{{ pass }}"
+        commands: 
+          - show ip ospf nei 
+          - show ip pro 
+          - show ip ospf database 
+      register: postcheck
+    - debug: var=postcheck.stdout_lines
+

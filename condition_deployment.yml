@@ -1,0 +1,65 @@
+---
+- name: clean configuration 
+  hosts: all 
+  connection: local 
+  gather_facts: false 
+
+  vars_prompt: 
+    - name: user
+      prompt: "Username" 
+      private: no 
+    - name: pass
+      prompt: "Password" 
+
+  tasks: 
+    - name: Clean Routers Configs 
+      ios_config: 
+        authorize: true 
+        provider: 
+          username: "{{user}}"
+          password: "{{pass}}"
+        lines: 
+          - interface fa0/0 
+          - no ip ospf network 
+
+      when: "'R' in inventory_hostname" 
+
+    - name: Clean Switches Configs 
+      ios_config: 
+        authorize: true 
+        provider: 
+          username: "{{user}}"
+          password: "{{pass}}"
+        lines: 
+          - inter g0/0 
+          - no ip ospf network 
+      when:  "'SW' in inventory_hostname " 
+
+
+    - name: check Routers configuration 
+      ios_command:
+        authorize: true
+        provider: 
+          username: "{{user}}"
+          password: "{{pass}}" 
+        commands: 
+          - show run inter f0/0
+      when: "'R' in inventory_hostname" 
+      register: show_rconfigs
+    - debug:
+        var=show_rconfigs.stdout_lines  
+
+    - name: check Switches configuration 
+      ios_command:
+        authorize: true
+        provider: 
+          username: "{{user}}"
+          password: "{{pass}}" 
+        commands: 
+          - show run inter g0/0
+      when: "'SW' in inventory_hostname " 
+      register: show_sconfigs
+    
+
+    - debug:
+       var=show_sconfigs.stdout_lines 

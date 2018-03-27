@@ -55,6 +55,7 @@
           username: "{{user}}"
           password: "{{pass}}"
         lines: 
+          - network 0.0.0.0 255.255.255.255 are 0 
           - passive-interface default
           - no passive-interface FastEthernet3/1
         parents: 

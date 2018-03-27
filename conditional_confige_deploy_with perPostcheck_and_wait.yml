@@ -1,0 +1,107 @@
+---
+- name: ospf change configuration
+  hosts: rs 
+  connection: local 
+  gather_facts: false
+
+  vars_prompt: 
+    - name: user
+      prompt: "username"
+      private: no 
+    - name: pass
+      prompt: "password"
+
+  tasks: 
+    - name: pre check - make sure there is no loopback and OSPF present in hosts
+      ios_command:
+        authorize: true
+        provider: 
+          username: "{{user}}"
+          password: "{{pass}}"
+        commands: 
+             - show ip inter brief | ex unas 
+             - show run | sec router ospf 
+      register: show_output
+    - debug: var=show_output.stdout_lines
+
+
+    - name: confige R1 LP 
+      ios_config: 
+        authorize: true
+        provider: 
+          username: "{{user}}"
+          password: "{{pass}}"
+        lines: 
+          - ip add 1.1.1.1 255.255.255.255
+        parents: inter lo0 
+      when: inventory_hostname == "R1" 
+
+    - name: confige R2 LP 
+      ios_config: 
+        authorize: true
+        provider: 
+          username: "{{user}}"
+          password: "{{pass}}"
+        lines: 
+          - ip add 2.2.2.2 255.255.255.255
+        parents: inter lo0 
+      when: inventory_hostname == "R2" 
+
+
+    - name: change OSPF configuration 
+      ios_config: 
+        authorize: true 
+        provider: 
+          username: "{{user}}"
+          password: "{{pass}}"
+        lines: 
+          - passive-interface default
+          - no passive-interface FastEthernet3/1
+        parents: 
+          - router ospf 1 
+ 
+    - name: change OSPF interfaces configs - R1
+      ios_config:
+        authorize: true  
+        provider: 
+          username: "{{user}}"
+          password: "{{pass}}"
+        lines: 
+          - ip ospf network point-to-point
+          - ip address 10.1.1.1 255.255.255.0 
+          - no shut 
+        parents: 
+          - interface FastEthernet3/1 
+      when: inventory_hostname == "R1" 
+
+    - name: change OSPF interfaces configs R2
+      ios_config:
+        authorize: true  
+        provider: 
+          username: "{{user}}"
+          password: "{{pass}}"
+        lines: 
+          - ip ospf network point-to-point
+          - ip address 10.1.1.2 255.255.255.0 
+          - no shut 
+        parents: 
+          - interface FastEthernet3/1 
+      when: inventory_hostname == "R2" 
+
+    - name: 30 sec Sleep time until OSPF converage 
+      wait_for: 
+        delay: 30
+
+    - name: post check 
+      ios_command:
+        authorize: true
+        provider: 
+          username: "{{user}}"
+          password: "{{pass}}"
+        commands: 
+             - show ip ospf nei 
+             - show ip ospf inter bri 
+             - show run | sec router ospf 
+      register: show_output
+
+    - debug: var=show_output.stdout_lines

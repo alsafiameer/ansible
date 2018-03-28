@@ -1,0 +1,89 @@
+--- 
+- name: configur routers IFACEs
+  hosts: all 
+  connection: local 
+  gather_facts: false 
+
+
+
+  vars_prompt: 
+    - name: user 
+      prompt: "Username"
+      private: no 
+
+    - name: pass 
+      prompt: "Password"
+
+
+  vars: 
+    global_ip: 10.1.0.0/19 
+
+
+  tasks: 
+    - name: precheck - expected ospf and f3/1  are not configred. 
+      ios_command:
+        authorize: true
+        provider: 
+          username: "{{user}}"
+          password: "{{pass}}"
+        commands: 
+        - show ip inter bri | ex unas 
+        - show run | sec router ospf 
+        - show ip protocol 
+      register: precheck
+    - debug: var=precheck.stdout_lines
+
+    - name: config ospf 
+      ios_config: 
+        authorize: true
+        provider: 
+          username: "{{user}}"
+          password: "{{pass}}"
+        lines:
+          - network 0.0.0.0 255.255.255.255 are 0 
+          - passive-interface fastEthernet 0/0 
+        parents: router ospf 1 
+
+    - name: config R1 iface 
+      ios_config: 
+        authorize: true
+        provider: 
+          username: "{{user}}"
+          password: "{{pass}}"
+        lines:
+          - ip ospf net point-to-point 
+          - no shut 
+          - ip add {{global_ip | ipsubnet(30, 0) | ipaddr('net') | ipaddr('1') | ipaddr('address') }} 255.255.255.252
+        parents: inter f3/1
+      when: '"R1" in inventory_hostname '
+
+    - name: config R2 iface 
+      ios_config: 
+        authorize: true
+        provider: 
+          username: "{{user}}"
+          password: "{{pass}}"
+        lines:
+          - ip ospf net point-to-point 
+          - no shut 
+          - ip add {{global_ip | ipsubnet(30, 0) | ipaddr('net') | ipaddr('2') | ipaddr('address') }} 255.255.255.252
+        parents: inter f3/1
+      when: '"R2" in inventory_hostname '
+
+    - name : 10 sec sleep waiting until ospf converage
+       wait_for: 
+        delay: 10 
+    
+    - name: post check 
+      ios_command: 
+        authorize: true
+        provider: 
+          username: "{{user}}"
+          password: "{{pass}}"
+        commands: 
+          - show ip inter bri | ex unas 
+          - show ip ospf nei 
+          - show ip ospf inter bri 
+      register: post_check - expected ospf and f3/1  are configred. 
+
+    - debug: var=post_check.stdout_lines
